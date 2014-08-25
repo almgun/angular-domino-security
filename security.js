@@ -1,16 +1,8 @@
+"use strict";
+
 angular.module('ga.domino-utils', []).
     provider('authentication', function () {
-        //Result from last call to logIn()
-        var _status = {
-            isLoggedIn: false,
-            isConnected: false,
-            user: {},
-            reset: function () {
-                this.isLoggedIn = false;
-                this.isConnected = false;
-                this.user = {};
-            }
-        };
+
         var _hostName = "http://xxxdomino9/";
         var _userInfoPath = 'dev/orders.nsf/api.xsp/userinfo';
         var _confirmLoginPath = 'dev/orders.nsf/login?OpenPage';
@@ -43,9 +35,11 @@ angular.module('ga.domino-utils', []).
                 return _confirmLoginPath;
             }
         };
-        this.$get = function ($http, $q) {
+        this.$get = function ($http, $q, objectFactory) {
+            var _loginStatus = objectFactory.loginStatusFactory();
             return {
                 logIn: function (user, pw) {
+                    //  var st = utils.loginStatusFactory();
                     var conf = {
                         method: 'POST',     //Angular
                         type: 'POST',       //jQuery
@@ -57,20 +51,18 @@ angular.module('ga.domino-utils', []).
                         withCredentials: true  //Angular
 
                     };
-                    console.log('this is the login-method ');
                     var pr = jQuery.ajax(conf);  //fungerer bare med jQuery vet ikke hvorfor
                     var deferred = $q.defer(); //Returnerer denne
 
                     $q.when(pr).then(function () {
-                        console.debug('login OK (method POST)');
-                        return this.getUser();
+                        var loginStatus = this.getUser();
+                        return loginStatus;
                     }.bind(this)).then(function (resolved) {
+                        _loginStatus = resolved;
                         deferred.resolve(resolved);
-                        console.debug('getUser OK ');
                     }, function (rejected) {
-                        _status.reset();
-                        console.error('Error in promise chain ' + rejected);
-                        deferred.reject('Error in login-function');
+                        _loginStatus = rejected;
+                        deferred.reject(rejected);
                     });
 
                     return deferred.promise;
@@ -80,13 +72,11 @@ angular.module('ga.domino-utils', []).
                     var str = _hostName + _logOutPath;
                     var pr = $http.get(str);
                     pr.then(function () {
-                        _status.reset();
-                        console.debug('log-out OK');
+                        _loginStatus.reset();
                     });
                     return pr;
                 },
                 isLoggedIn: function () {
-                    console.log('this is the isLoggedIn-method');
                     var deferred = $q.defer();
                     var conf = {
                         method: 'OPTIONS',
@@ -106,34 +96,34 @@ angular.module('ga.domino-utils', []).
                     });
                     return deferred.promise;
                 },
-                getUser: function () {
+                getUser: function (userInfoPath) {
                     var deferred = $q.defer();
+                    var status = objectFactory.loginStatusFactory();
                     var conf = {
                         method: 'GET',
-                        url: _hostName + _userInfoPath
+                        url: _hostName + (userInfoPath || _userInfoPath)
                     };
                     var prom = $http(conf);
                     //Must use succsess to get header obj
-                    prom.success(function (userObj, status, header) {
+                    prom.success(function (userObj, st, header) {
                         var respHeader = header();
+
                         var html = respHeader['content-type'].match(/text\/html/);
                         if (!html) {
-                            _status.user = _.clone(userObj);
-                            _status.isLoggedIn = true;
-                            _status.isConnected = true;
-                            deferred.resolve(_status);
-                            console.log(JSON.stringify(_status.user));
+                            status.user = userObj;
+                            status.isLoggedIn = true;
+                            status.isConnected = true;
+                            status.msg = JSON.stringify(status.user);
+                            deferred.resolve(status);
                         }
                         else {
-                            _status.reset();
-                            _status.isConnected = true;
-                            console.error('Could not get user-info');
-                            deferred.reject('Could not get user-info');
+                            status.isConnected = true;
+                            status.msg = 'Error. Could not get user-info';
+                            deferred.reject(status);
                         }
                     }).error(function () {
-                        _status.reset();
-                        console.error('Error not connected');
-                        deferred.reject('Error not connected');
+                        status.msg = 'Error.  Not connected';
+                        deferred.reject(status);
 
                     });
                     return deferred.promise;
@@ -145,11 +135,9 @@ angular.module('ga.domino-utils', []).
                             confirmLoginPath: _confirmLoginPath
                         }
                     )
-
-
                 },
                 localGetUser: function () {
-                    return Object.freeze(_status.user)
+                    return Object.freeze(_loginStatus.user)
                 }
             }
         }
@@ -161,13 +149,37 @@ angular.module('ga.domino-utils', []).
             }
         }
 
-}
+    }
 ).provider('authBasic', function () {
         return{
             $get: function () {
 
             }
         }
+    }
+).factory('objectFactory', function () {
+        var _loginStatusPrototype = {
+            reset: function () {
+                this.isLoggedIn = false;
+                this.isConnected = false;
+                this.msg = "";
+                this.user = {};
+            }
+        };
+
+        return{
+            loginStatusFactory: function () {
+                var ret = Object.create(_loginStatusPrototype);
+                ret.isLoggedIn = false;
+                ret.isConnected = false;
+                ret.msg = "";
+                ret.user = {};
+                return ret;
+            }
+        }
     });
+
+
+
 
 
