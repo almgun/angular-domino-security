@@ -8,9 +8,9 @@ angular.module('ga.domino-utils', []).
         var _confirmLoginPath = 'dev/orders.nsf/login?OpenPage';
         var _logInPath = 'names.nsf?Login';
         var _logOutPath = 'names.nsf?Logout';
-        this.hostName = function (host) {
-            if (host) {
-                _hostName = host;
+        this.hostName = function (val) {
+            if (val) {
+                _hostName = val;
                 return this;
             }
             else {
@@ -39,7 +39,6 @@ angular.module('ga.domino-utils', []).
             var _loginStatus = objectFactory.loginStatusFactory();
             return {
                 logIn: function (user, pw) {
-                    //  var st = utils.loginStatusFactory();
                     var conf = {
                         method: 'POST',     //Angular
                         type: 'POST',       //jQuery
@@ -61,8 +60,15 @@ angular.module('ga.domino-utils', []).
                         _loginStatus = resolved;
                         deferred.resolve(resolved);
                     }, function (rejected) {
-                        _loginStatus = rejected;
-                        deferred.reject(rejected);
+                        if(rejected.msg){
+                            _loginStatus = rejected;
+                        }
+                        else{
+                            _loginStatus = objectFactory.loginStatusFactory();
+                            _loginStatus.msg = "Not Connected"
+                        }
+
+                        deferred.reject(_loginStatus);
                     });
 
                     return deferred.promise;
@@ -76,12 +82,12 @@ angular.module('ga.domino-utils', []).
                     });
                     return pr;
                 },
-                isLoggedIn: function () {
+                isLoggedIn: function (confirmLoginPath) {
                     var deferred = $q.defer();
                     var conf = {
                         method: 'OPTIONS',
                         cache: false,
-                        url: _hostName + _confirmLoginPath
+                        url: _hostName + (confirmLoginPath || _confirmLoginPath)
                     };
                     var prom = $http(conf);
                     prom.then(function (res) {
@@ -138,6 +144,9 @@ angular.module('ga.domino-utils', []).
                 },
                 localGetUser: function () {
                     return Object.freeze(_loginStatus.user)
+                },
+                localGetLoginStatus: function () {
+                    return Object.freeze(_loginStatus);
                 }
             }
         }
