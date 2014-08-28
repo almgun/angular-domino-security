@@ -91,9 +91,11 @@ angular.module('ga.domino-utils', []).
                     };
                     var prom = $http(conf);
                     prom.then(function (res) {
+                        console.log(res);
                         if (res.data) {
                             deferred.reject('NOT-LOGGED-IN');
                         }
+                        else
                         {
                             deferred.resolve('LOGGED-IN');
                         }

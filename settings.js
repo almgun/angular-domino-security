@@ -11,7 +11,7 @@ angular.module('ga.domino-utils').provider('appSetup', function () {
 }
 
 ).provider('appConfig', function () {
-        var _path;
+        var _path = 'orders.nsf/api.xsp/config/';
         var _host;
         var _cat='';
 
@@ -48,8 +48,12 @@ angular.module('ga.domino-utils').provider('appSetup', function () {
                         console.log(conf.url);
                         var prom = $http(conf);
                         prom.then(function (res) {
-                            console.log(res);
-                        })
+                            deferred.resolve(res.data);
+                        },function()
+                        {
+                            deferred.reject("REJECTED. " + conf.url);
+                        });
+                        return deferred.promise;
                     }
                 }
 
