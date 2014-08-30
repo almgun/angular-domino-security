@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('ga.domino-utils', []).
+angular.module('ga.domino-security', []).
     provider('authentication', function () {
 
         var _hostName = "http://xxxdomino9/";
@@ -35,7 +35,7 @@ angular.module('ga.domino-utils', []).
                 return _confirmLoginPath;
             }
         };
-        this.$get = function ($http, $q, objectFactory) {
+        this.$get = function ($http, $q, objectFactory, helpers) {
             var _loginStatus = objectFactory.loginStatusFactory();
             return {
                 logIn: function (user, pw) {
@@ -112,9 +112,11 @@ angular.module('ga.domino-utils', []).
                         url: _hostName + (userInfoPath || _userInfoPath)
                     };
                     var prom = $http(conf);
+                    return helpers.responseHandler(prom);
                     //Must use succsess to get header obj
-                    prom.success(function (userObj, st, header) {
+                   /* prom.success(function (userObj, st, header) {
                         var respHeader = header();
+                        console.log(JSON.stringify(userObj));
 
                         var html = respHeader['content-type'].match(/text\/html/);
                         if (!html) {
@@ -134,7 +136,7 @@ angular.module('ga.domino-utils', []).
                         deferred.reject(status);
 
                     });
-                    return deferred.promise;
+                    return deferred.promise;*/
                 },
                 localGetProviderConfig: function () {
                     return Object.freeze({

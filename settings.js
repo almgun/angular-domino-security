@@ -2,24 +2,23 @@
 /**
  * Created by almgun on 23.08.2014.
  */
-angular.module('ga.domino-utils').provider('appSetup', function () {
-    return{
-        $get: function () {
+angular.module('ga.domino-security').provider('appSetup', function () {
+        return{
+            $get: function () {
 
+            }
         }
     }
-}
-
 ).provider('appConfig', function () {
         var _path = 'orders.nsf/api.xsp/config/';
         var _host;
-        var _cat='';
+        var _cat = '';
 
 
         //_host          _path          _service       key      _cat
         //http://domino9/dev/orders.nsf/api.xsp/config/itemtype/app
         return{
-            path : function (val) {
+            path: function (val) {
                 if (val) {
                     _path = val;
                     return this;
@@ -28,7 +27,7 @@ angular.module('ga.domino-utils').provider('appSetup', function () {
                     return _path;
                 }
             },
-            host : function (val) {
+            host: function (val) {
                 if (val) {
                     _host = val;
                     return this;
@@ -37,27 +36,45 @@ angular.module('ga.domino-utils').provider('appSetup', function () {
                     return _host;
                 }
             },
-            $get: function ($q,$http,objectFactory) {
+            $get: function ($q, $http, helpers) {
                 return{
-                    getOption:function (key,path,host,cat) {
+                    getOption: function (key, path, host, cat) {
                         var deferred = $q.defer();
                         var conf = {
                             method: 'GET',
-                            url: (host || _host)+(path || _path)  + key + '/' + (cat || _cat)
+                            url: (host || _host) + (path || _path) + key + '/' + (cat || _cat)
                         };
                         console.log(conf.url);
                         var prom = $http(conf);
-                        prom.then(function (res) {
-                            deferred.resolve(res.data);
-                        },function()
-                        {
-                            deferred.reject("REJECTED. " + conf.url);
-                        });
-                        return deferred.promise;
+                        return helpers.responseHandler(prom);
                     }
                 }
-
-
+            }
+        }
+    }).factory('helpers', function ($q) {
+        return {
+            responseHandler: function (prom) {
+                var deferred = $q.defer();
+                prom.then(function (res) {
+                    if (res.data.status) {
+                        if (res.data.status === "OK") {
+                            deferred.resolve(res.data);
+                        }
+                        else {
+                            deferred.reject(res.data);
+                        }
+                    }
+                    else {
+                        deferred.reject({
+                            status: "NOK",
+                            message: "LOGGED-OUT or INVALID-URL"
+                        });
+                    }
+                }, function () {
+                    deferred.reject({message: "REQUEST REJECTED. ", status: "NOK"}
+                    );
+                });
+                return deferred.promise;
             }
         }
     })
