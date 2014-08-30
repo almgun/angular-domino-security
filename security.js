@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('ga.domino-security', []).
+angular.module('ga.domino-utils', []).
     provider('authentication', function () {
 
         var _hostName = "http://xxxdomino9/";
@@ -170,27 +170,7 @@ angular.module('ga.domino-security', []).
             }
         }
     }
-).factory('objectFactory', function () {
-        var _loginStatusPrototype = {
-            reset: function () {
-                this.isLoggedIn = false;
-                this.isConnected = false;
-                this.msg = "";
-                this.user = {};
-            }
-        };
-
-        return{
-            loginStatusFactory: function () {
-                var ret = Object.create(_loginStatusPrototype);
-                ret.isLoggedIn = false;
-                ret.isConnected = false;
-                ret.msg = "";
-                ret.user = {};
-                return ret;
-            }
-        }
-    });
+)
 
 
 

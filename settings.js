@@ -2,7 +2,7 @@
 /**
  * Created by almgun on 23.08.2014.
  */
-angular.module('ga.domino-security').provider('appSetup', function () {
+angular.module('ga.domino-utils').provider('appSetup', function () {
         return{
             $get: function () {
 
@@ -49,32 +49,6 @@ angular.module('ga.domino-security').provider('appSetup', function () {
                         return helpers.responseHandler(prom);
                     }
                 }
-            }
-        }
-    }).factory('helpers', function ($q) {
-        return {
-            responseHandler: function (prom) {
-                var deferred = $q.defer();
-                prom.then(function (res) {
-                    if (res.data.status) {
-                        if (res.data.status === "OK") {
-                            deferred.resolve(res.data);
-                        }
-                        else {
-                            deferred.reject(res.data);
-                        }
-                    }
-                    else {
-                        deferred.reject({
-                            status: "NOK",
-                            message: "LOGGED-OUT or INVALID-URL"
-                        });
-                    }
-                }, function () {
-                    deferred.reject({message: "REQUEST REJECTED. ", status: "NOK"}
-                    );
-                });
-                return deferred.promise;
             }
         }
     })
