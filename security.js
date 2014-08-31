@@ -36,7 +36,7 @@ angular.module('ga.domino-utils', []).
             }
         };
         this.$get = function ($http, $q, objectFactory, helpers) {
-            var _loginStatus = objectFactory.loginStatusFactory();
+            var _loggedInUser = objectFactory.serverResponseFactory();
             return {
                 logIn: function (user, pw) {
                     var conf = {
@@ -51,34 +51,24 @@ angular.module('ga.domino-utils', []).
 
                     };
                     var pr = jQuery.ajax(conf);  //fungerer bare med jQuery vet ikke hvorfor
-                    var deferred = $q.defer(); //Returnerer denne
-
-                    $q.when(pr).then(function () {
-                        var loginStatus = this.getUser();
-                        return loginStatus;
+                    return $q.when(pr).then(function () {
+                        return this.getUser();
                     }.bind(this)).then(function (resolved) {
-                        _loginStatus = resolved;
-                        deferred.resolve(resolved);
+                        console.log(JSON.stringify(resolved));
+                        _loggedInUser = resolved;
+
+                       return resolved;
                     }, function (rejected) {
-                        if(rejected.msg){
-                            _loginStatus = rejected;
-                        }
-                        else{
-                            _loginStatus = objectFactory.loginStatusFactory();
-                            _loginStatus.msg = "Not Connected"
-                        }
-
-                        deferred.reject(_loginStatus);
+                        console.log(JSON.stringify(rejected));
+                        _loggedInUser =  helpers.responseHandler( $q.when(pr));
+                        return _loggedInUser;
                     });
-
-                    return deferred.promise;
-
                 },
                 logOut: function () {
                     var str = _hostName + _logOutPath;
                     var pr = $http.get(str);
                     pr.then(function () {
-                        _loginStatus.reset();
+                        _loggedInUser.reset();
                     });
                     return pr;
                 },
@@ -106,14 +96,17 @@ angular.module('ga.domino-utils', []).
                 },
                 getUser: function (userInfoPath) {
                     var deferred = $q.defer();
-                    var status = objectFactory.loginStatusFactory();
+                   // var status = objectFactory.serverResponseFactory();
                     var conf = {
                         method: 'GET',
                         url: _hostName + (userInfoPath || _userInfoPath)
                     };
                     var prom = $http(conf);
+                  /*  prom.then(function (resp) {
+                        console.log(JSON.stringify(resp));
+                    })*/
                     return helpers.responseHandler(prom);
-                    //Must use succsess to get header obj
+
                    /* prom.success(function (userObj, st, header) {
                         var respHeader = header();
                         console.log(JSON.stringify(userObj));
@@ -147,10 +140,7 @@ angular.module('ga.domino-utils', []).
                     )
                 },
                 localGetUser: function () {
-                    return Object.freeze(_loginStatus.user)
-                },
-                localGetLoginStatus: function () {
-                    return Object.freeze(_loginStatus);
+                    return Object.freeze(_loggedInUser);
                 }
             }
         }

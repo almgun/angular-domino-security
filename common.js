@@ -1,50 +1,63 @@
+'use strict';
 /**
  * Created by almgun on 30.08.2014.
  */
-angular.module('ga.domino-utils').factory('helpers', function ($q) {
+angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory) {
     return {
         responseHandler: function (prom) {
             var deferred = $q.defer();
+            var rr = objectFactory.serverResponseFactory();
             prom.then(function (res) {
-                if (res.data.status) {
+                console.log("HER:" + JSON.stringify(res));
+                if (res.data && res.data.status) {
+                    rr.setObj(res.data);
+                    console.log("Inside: " + JSON.stringify(rr));
+
+                   // rr.status = res.data.status;
+                    console.log("Inside status: " +  rr.status);
                     if (res.data.status === "OK") {
-                        deferred.resolve(res.data);
+                        deferred.resolve(rr);
                     }
-                    else {
-                        deferred.reject(res.data);
+                    else if (res.data.status !== "NOK") {
+                        rr.setObj({"message": "UNKNOWN RESPONSE"});
+                        deferred.reject(rr);
                     }
                 }
                 else {
-                    deferred.reject({
-                        status: "NOK",
-                        message: "LOGGED-OUT or INVALID-URL"
-                    });
+                    rr.setObj({"message": "UNKNOWN RESPONSE"});
+                    deferred.reject(rr);
                 }
             }, function () {
-                deferred.reject({message: "REQUEST REJECTED. ", status: "NOK"}
-                );
+                rr.setObj({"message": "REQUEST REJECTED"});
+                deferred.reject(rr);
             });
+
             return deferred.promise;
         }
     }
 }).factory('objectFactory', function () {
-    var _loginStatusPrototype = {
+    var _severResponsePrototype = {
         reset: function () {
-            this.isLoggedIn = false;
-            this.isConnected = false;
-            this.msg = "";
-            this.user = {};
+            this.status = "NOK";
+            this.message = "";
+            this.data = {};
+        }, setObj: function (response) {
+            this.status = response.status || "NOK";
+            this.message = response.message || "";
+            this.data = response.data || {};
         }
     };
 
     return{
-        loginStatusFactory: function () {
-            var ret = Object.create(_loginStatusPrototype);
-            ret.isLoggedIn = false;
-            ret.isConnected = false;
-            ret.msg = "";
-            ret.user = {};
-            return ret;
+        serverResponseFactory: function () {
+            return Object.create(_severResponsePrototype, {
+                status: { writable:true, enumerable:true, value: "NOK" },
+                message: { writable:true, enumerable:true, value: "" },
+                data: { writable:true, enumerable:true, value: {} }
+
+            });
+
+
         }
     }
 });
