@@ -28,7 +28,6 @@ angular.module('ga.domino-utils').provider('staff',
             $get: function ($q, $http, helpers) {
                 return{
                     getEmployeesByQuery: function (qry, path, host ) {
-                        var deferred = $q.defer();
                         var conf = {
                             method: 'GET',
                             url: (host || _host) + (path || _path) + qry
