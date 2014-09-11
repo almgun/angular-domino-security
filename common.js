@@ -8,13 +8,8 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
             var deferred = $q.defer();
             var rr = objectFactory.serverResponseFactory();
             prom.then(function (res) {
-                console.log("HER:" + JSON.stringify(res));
                 if (res.data && res.data.status) {
                     rr.setObj(res.data);
-                    console.log("Inside: " + JSON.stringify(rr));
-
-                   // rr.status = res.data.status;
-                    console.log("Inside status: " +  rr.status);
                     if (res.data.status === "OK") {
                         deferred.resolve(rr);
                     }
@@ -31,7 +26,6 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
                 rr.setObj({"message": "REQUEST REJECTED"});
                 deferred.reject(rr);
             });
-
             return deferred.promise;
         }
     }
@@ -54,10 +48,7 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
                 status: { writable:true, enumerable:true, value: "NOK" },
                 message: { writable:true, enumerable:true, value: "" },
                 data: { writable:true, enumerable:true, value: {} }
-
             });
-
-
         }
     }
 });

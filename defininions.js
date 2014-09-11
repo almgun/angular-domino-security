@@ -2,7 +2,8 @@
 
 var user =
 {
-    uName: 'User Name',
+    userName: 'User Name',
+    userNameFull: 'User Name/Acme',
     roles: ['r1', 'r2']
 }
 

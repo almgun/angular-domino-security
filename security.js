@@ -56,7 +56,6 @@ angular.module('ga.domino-utils', []).
                     }.bind(this)).then(function (resolved) {
                         console.log(JSON.stringify(resolved));
                         _loggedInUser = resolved;
-
                        return resolved;
                     }, function (rejected) {
                         console.log(JSON.stringify(rejected));
@@ -73,6 +72,7 @@ angular.module('ga.domino-utils', []).
                     return pr;
                 },
                 isLoggedIn: function (confirmLoginPath) {
+                    var resp = objectFactory.serverResponseFactory();
                     var deferred = $q.defer();
                     var conf = {
                         method: 'OPTIONS',
@@ -83,14 +83,14 @@ angular.module('ga.domino-utils', []).
                     prom.then(function (res) {
                         console.log(res);
                         if (res.data) {
-                            deferred.reject('NOT-LOGGED-IN');
+                            deferred.reject(resp.setObj({message:'NOT-LOGGED-IN',status:'NOK'}));
                         }
                         else
                         {
-                            deferred.resolve('LOGGED-IN');
+                            deferred.reject(resp.setObj({message:'NLOGGED-IN',status:'OK'}));
                         }
                     }, function () {
-                        deferred.reject('NOT-CONNECTED');
+                        deferred.reject(resp.setObj({message:'NOT-CONNECTED',status:'NOK'}));
                     });
                     return deferred.promise;
                 },
