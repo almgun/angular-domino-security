@@ -6,6 +6,6 @@ The project relies heavily on a set of domino design-element that needs to be pr
 The main components provided is 
 <ul>
 <li>Security. Provider for log-in functionality
-<li>Config. Provider Keywords and setup
+<li>Config. Provider for accessing keywords
 <li>Staff. Provider for easy access to staff information
 </ul>
