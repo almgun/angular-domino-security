@@ -5,7 +5,7 @@
     "Gunnar Almås <gunnar.almaas@brunvoll.no>"
   ],
   "description": "angular services related to domino security",
-  "main": "security.js",
+  "main": ["security.js","common.js","settings.js","staff.js"],
   "keywords": [
     "domino",
     "security"
