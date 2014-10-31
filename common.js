@@ -10,11 +10,12 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
             prom.then(function (res) {
                 if (res.data && res.data.status) {
                     rr.setObj(res.data);
-                    if (res.data.status === "OK") {
+                    if (res.data.status === "OK" || res.data.status === "NOK") {
                         deferred.resolve(rr);
                     }
-                    else if (res.data.status !== "NOK") {
-                        rr.setObj({"message": "UNKNOWN RESPONSE"});
+                    else {
+                        rr.status = "NOK";
+                        rr.message = "UNKNOWN STATUS IN RESPONSE";
                         deferred.reject(rr);
                     }
                 }
@@ -45,10 +46,49 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
     return{
         serverResponseFactory: function () {
             return Object.create(_severResponsePrototype, {
-                status: { writable:true, enumerable:true, value: "NOK" },
-                message: { writable:true, enumerable:true, value: "" },
-                data: { writable:true, enumerable:true, value: {} }
+                status: { writable: true, enumerable: true, value: "NOK" },
+                message: { writable: true, enumerable: true, value: "" },
+                data: { writable: true, enumerable: true, value: {} }
             });
         }
+    }
+}).factory('transformRequestAsFormPost', function () {
+    //post JSON data as form data
+    // http://www.bennadel.com/blog/2615-posting-form-data-with-http-in-angularjs.htm
+    function transformRequest(data, getHeaders) {
+        var headers = getHeaders();
+        headers[ "Content-Type" ] = "application/x-www-form-urlencoded; charset=utf-8";
+        return( serializeData(data) );
+    }
+    return( transformRequest );
+
+
+    function serializeData(data) {
+        if (!angular.isObject(data)) {
+            return( ( data == null ) ? "" : data.toString() );
+        }
+
+        var buffer = [];
+
+        // Serialize each key in the object.
+        for (var name in data) {
+            if (!data.hasOwnProperty(name)) {
+                continue;
+            }
+
+            var value = data[ name ];
+            buffer.push(
+                    encodeURIComponent(name) +
+                    "=" +
+                    encodeURIComponent(( value == null ) ? "" : value)
+            );
+        }
+        // Serialize the buffer and clean it up for transportation.
+        var source = buffer
+                .join("&")
+                .replace(/%20/g, "+")
+            ;
+        console.log('transformed: ', source);
+        return( source );
     }
 });

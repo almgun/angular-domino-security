@@ -43,23 +43,28 @@ angular.module('ga.domino-utils', []).
                         method: 'POST',     //Angular
                         type: 'POST',       //jQuery
                         url: _hostName + _logInPath,
-                        data: {username: user || 'Web User', password: pw || 'almgun'},
+                        data: {username: user || 'Web User', password: pw || 'almgun', redirectto: _hostName},
                         xhrFields: {
                             withCredentials: true //jQuery
                         },
                         withCredentials: true  //Angular
 
                     };
-                    var pr = jQuery.ajax(conf);  //fungerer bare med jQuery vet ikke hvorfor
+                    var pr = jQuery.ajax(conf);  //Gjør om til form encoding for å bruke angular $http
+                    // use a promiseChain to detect log-in status.
+                    // 1.   POST to restricted resource
+                    // 2.   GET userdata from a restricted user service. If both requsts resolve, then we are logged in
+                    //      Don't know anything about log-in status until return from getUser()
+                    // 3.   Common error handling in second then parameter
                     return $q.when(pr).then(function () {
                         return this.getUser();
                     }.bind(this)).then(function (resolved) {
                         console.log(JSON.stringify(resolved));
                         _loggedInUser = resolved;
-                       return resolved;
+                        return resolved;
                     }, function (rejected) {
-                        console.log(JSON.stringify(rejected));
-                        _loggedInUser =  helpers.responseHandler( $q.when(pr));
+                        console.error(JSON.stringify(rejected));
+                        _loggedInUser = helpers.responseHandler($q.when(pr));
                         return _loggedInUser;
                     });
                 },
@@ -71,6 +76,9 @@ angular.module('ga.domino-utils', []).
                     });
                     return pr;
                 },
+                //  Send http-option request against the log-in resource
+                //  If the resource is accessed correctly, then the resolved object will not have a data property defined
+
                 isLoggedIn: function (confirmLoginPath) {
                     var resp = objectFactory.serverResponseFactory();
                     var deferred = $q.defer();
@@ -83,53 +91,54 @@ angular.module('ga.domino-utils', []).
                     prom.then(function (res) {
                         console.log(res);
                         if (res.data) {
-                            deferred.reject(resp.setObj({message:'NOT-LOGGED-IN',status:'NOK'}));
+                            deferred.reject(resp.setObj({message: 'NOT-LOGGED-IN', status: 'NOK'}));
                         }
-                        else
-                        {
-                            deferred.reject(resp.setObj({message:'NLOGGED-IN',status:'OK'}));
+                        else {
+                            deferred.resolve(resp.setObj({message: 'LOGGED-IN', status: 'OK'}));
                         }
                     }, function () {
-                        deferred.reject(resp.setObj({message:'NOT-CONNECTED',status:'NOK'}));
+                        deferred.reject(resp.setObj({message: 'NOT-CONNECTED', status: 'NOK'}));
                     });
                     return deferred.promise;
                 },
                 getUser: function (userInfoPath) {
                     var deferred = $q.defer();
-                   // var status = objectFactory.serverResponseFactory();
+                    // var status = objectFactory.serverResponseFactory();
                     var conf = {
                         method: 'GET',
                         url: _hostName + (userInfoPath || _userInfoPath)
                     };
+
+                    ;
                     var prom = $http(conf);
-                  /*  prom.then(function (resp) {
-                        console.log(JSON.stringify(resp));
-                    })*/
+
+
+
                     return helpers.responseHandler(prom);
 
-                   /* prom.success(function (userObj, st, header) {
-                        var respHeader = header();
-                        console.log(JSON.stringify(userObj));
+                    /* prom.success(function (userObj, st, header) {
+                     var respHeader = header();
+                     console.log(JSON.stringify(userObj));
 
-                        var html = respHeader['content-type'].match(/text\/html/);
-                        if (!html) {
-                            status.user = userObj;
-                            status.isLoggedIn = true;
-                            status.isConnected = true;
-                            status.msg = JSON.stringify(status.user);
-                            deferred.resolve(status);
-                        }
-                        else {
-                            status.isConnected = true;
-                            status.msg = 'Error. Could not get user-info';
-                            deferred.reject(status);
-                        }
-                    }).error(function () {
-                        status.msg = 'Error.  Not connected';
-                        deferred.reject(status);
+                     var html = respHeader['content-type'].match(/text\/html/);
+                     if (!html) {
+                     status.user = userObj;
+                     status.isLoggedIn = true;
+                     status.isConnected = true;
+                     status.msg = JSON.stringify(status.user);
+                     deferred.resolve(status);
+                     }
+                     else {
+                     status.isConnected = true;
+                     status.msg = 'Error. Could not get user-info';
+                     deferred.reject(status);
+                     }
+                     }).error(function () {
+                     status.msg = 'Error.  Not connected';
+                     deferred.reject(status);
 
-                    });
-                    return deferred.promise;*/
+                     });
+                     return deferred.promise;*/
                 },
                 localGetProviderConfig: function () {
                     return Object.freeze({
