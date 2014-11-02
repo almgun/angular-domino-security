@@ -4,7 +4,7 @@
  */
 angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory) {
     return {
-        responseHandler: function (prom) {
+        responseHandler: function (prom, extra) {
             var deferred = $q.defer();
             var rr = objectFactory.serverResponseFactory();
             prom.then(function (res) {
@@ -20,7 +20,7 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
                     }
                 }
                 else {
-                    rr.setObj({"message": "UNKNOWN RESPONSE"});
+                    rr.setObj({"message": "UNKNOWN RESPONSE (HTML login page ?)" + extra || ''});
                     deferred.reject(rr);
                 }
             }, function () {
@@ -50,6 +50,9 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
                 message: { writable: true, enumerable: true, value: "" },
                 data: { writable: true, enumerable: true, value: {} }
             });
+        },
+        userRecord: function (user,roles) {
+            return {user:user||{},roles:roles||[]};
         }
     }
 }).factory('transformRequestAsFormPost', function () {
