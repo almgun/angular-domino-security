@@ -38,7 +38,7 @@ angular.module('ga.domino-utils', []).
         this.$get = function ($http, $q, objectFactory, helpers) {
             var _loggedInUser = objectFactory.userRecord();
             return {
-                logIn: function (user, pw) {
+                logInOld: function (user, pw) {
                     var conf = {
                         method: 'POST',     //Angular
                         type: 'POST',       //jQuery
@@ -69,7 +69,14 @@ angular.module('ga.domino-utils', []).
                     });
                 },
                 //Log in to database and redirect to userinfo path. What happens then ??
-                logInExp: function (user, pw) {
+                logIn: function (user, pw) {
+                  /*  This method is sending a POST to the relevant .nsf with username and password
+                 The redirect is set to the user-service, returning data about the authenticated user on success
+                 Four possible outcomes of the log-in attempt. Only scenario one will resolve the deferred object
+                 1. log-in ok and a user-record object is returned in the resolve statement. Local _loggedInUser is set with the same value
+                 2. log-in call is resolved, but with invalid username or pw
+                 3. log-in call is resolved, but with an error in the getUserObject service. In this case the JSON object from the server is returned as is
+                 4. log-in is rejected. Infrastructure  problems*/
                     var conf = {
                         method: 'POST',     //Angular
                         type: 'POST',       //jQuery
@@ -83,11 +90,7 @@ angular.module('ga.domino-utils', []).
                     };
                     _loggedInUser = objectFactory.userRecord();
                     var deferred = $q.defer();
-                    // Four possible outcomes of the log-in attempt. Only scenario one will resolve the deffered object
-                    // 1. log-in ok and a user-record object is returned in the resolve statement. Local _loggedInUser is set with the same value
-                    // 2. log-in call is resolved, but with invalid username or pw
-                    // 3. log-in call is resolved, but with an error in the getUserObject service. In this case the JSON object from the server is returned as is
-                    // 4. log-in is rejected. Infrastructure  problems
+
 
                     var pr = jQuery.ajax(conf);
                     $q.when(pr).then(function (res) {
@@ -156,9 +159,6 @@ angular.module('ga.domino-utils', []).
 
                     ;
                     var prom = $http(conf);
-
-
-
                     return helpers.responseHandler(prom, ' from getUser-service');
 
                     /* prom.success(function (userObj, st, header) {
@@ -195,7 +195,24 @@ angular.module('ga.domino-utils', []).
                 },
                 localGetUser: function () {
                     return Object.freeze(_loggedInUser);
+                },
+                hasRole: function (role) {
+                    role = '['+role + ']';
+                    return _.contains(_loggedInUser.roles,role);
+                },
+                isReader: function () {
+
+                    return _loggedInUser ? _loggedInUser.aclLevel == 3:false;
+                },
+                isEditor: function () {
+                  //  console.log('acl level', _loggedInUser.aclLevel);
+                    return _loggedInUser ? _loggedInUser.aclLevel > 3:false;
                 }
+
+
+
+
+
             }
         }
     }

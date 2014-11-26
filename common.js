@@ -9,13 +9,12 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
             var rr = objectFactory.serverResponseFactory();
             prom.then(function (res) {
                 if (res.data && res.data.status) {
-                    rr.setObj(res.data);
                     if (res.data.status === "OK" || res.data.status === "NOK") {
+                        rr.setObj(res.data);
                         deferred.resolve(rr);
                     }
                     else {
-                        rr.status = "NOK";
-                        rr.message = "UNKNOWN STATUS IN RESPONSE";
+                        rr.setObj( {message: "UNKNOWN STATUS IN RESPONSE",status:"NOK"} );
                         deferred.reject(rr);
                     }
                 }
@@ -51,8 +50,8 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
                 data: { writable: true, enumerable: true, value: {} }
             });
         },
-        userRecord: function (user,roles) {
-            return {user:user||{},roles:roles||[]};
+        userRecord: function (userName, roles, aclLevel) {
+            return {userName: (userName || {}), roles: (roles || []), aclLevel: (aclLevel || 0) };
         }
     }
 }).factory('transformRequestAsFormPost', function () {
@@ -63,6 +62,7 @@ angular.module('ga.domino-utils').factory('helpers', function ($q, objectFactory
         headers[ "Content-Type" ] = "application/x-www-form-urlencoded; charset=utf-8";
         return( serializeData(data) );
     }
+
     return( transformRequest );
 
 

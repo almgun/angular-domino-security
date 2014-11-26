@@ -32,7 +32,6 @@ angular.module('ga.domino-utils').provider('staff',
                             method: 'GET',
                             url: (host || _host) + (path || _path) + qry
                         };
-                        console.log(conf.url);
                         var prom = $http(conf);
                         return helpers.responseHandler(prom);
                     }
